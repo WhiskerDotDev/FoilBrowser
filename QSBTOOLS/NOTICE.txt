@@ -1,3 +1,0 @@
-PLEASE NOTE:
-
-This is a packed, distributed copy of QSB.exe, a tool by the Qt Company to compile shader files (.frag, .vert, etc.) into cross-platform shader code. I am not the author of the utility, but merely distributing it with my application for user convenience. The Qt Company and Microsoft are the authors of the included binary files (including but not limited to .exe and .dll formats)

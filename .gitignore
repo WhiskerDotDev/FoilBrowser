@@ -205,3 +205,5 @@ RUNTIMEDLLS/PATH.txt
     # Let's not keep in files used for testing
 
 *test*.*
+
+QSBTOOLS/
