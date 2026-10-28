@@ -1,0 +1,15 @@
+--disable-frame-rate-limit
+
+--enable-low-end-device-mode
+
+adding "--lite-mode" to js-flags
+
+
+disable-frame-rate-limit
+vsync-interval=0
+enable-gpu-rasterization
+enable-zero-copy
+enable-features=SharedArrayBuffer
+disable-smooth-scrolling
+js-flags="--always-opt --max-inlined-source-size=1000 --turbo-filer=*"
+process-per-site

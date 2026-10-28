@@ -1,0 +1,6 @@
+Any issues, incorrect definitions? Please, contact "whiskerdotdev" (me) on GitHub!
+
+--lite-mode : reduces RAM and CPU usage.
+--always-opt : forces JITC optimizations whenever possible.
+--max-inlined-source-size : changes the max length for which code can be inlined.
+--turbo-filter : setting this to "*" makes every function a candidate for TurboFan compilation.
