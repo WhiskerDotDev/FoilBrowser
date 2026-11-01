@@ -52,35 +52,6 @@ Window{
     verticalBounds: 2; horizontalBounds: 3;
   }
 
-  function switchToTab(idx : int): void{
-    // if(webBox.count <= idx || idx  < 0 || webBox.currentIndex === idx) return;
-    // webBox.currentIndex = idx;
-    // currentView.forceActiveFocus();
-  }
-
-  function deleteTab( idx  = webBox.currentIndex, spliceTabArray = true) : void{
-    // Consider adjusting it to allow first tab deletion??
-    // add param to enable tab to be "emptied".
-    // console.log("trying to destroy", idx);
-    // if ( webBox.currentIndex  === 0  && idx === 0){
-    //   // currentView.url = urlHelper.getEngineURL();
-    //   //Prevents first tab from being deleted. Resets it instead.
-    // } else{
-    //   webBox.currentIndex -=1; // Change this up!
-    //   if(webBox.currentIndex < 0)webBox.currentIndex = 0;
-    //   webBox.children[idx].destroy();
-    //   webBox.children.splice(idx, 1); //Apparently I have to destroy the child
-    //   gc();
-    //   // root.tabs.splice(idx, 1); // Splicing an off-screen value. We should probably make a safeguard to temporarily disable tab switching?
-
-    //   //after splicing, consider either adding a default/placeholder value, or, make it inaccessible.
-    //   //Allow to create a default component in place?
-    //   // Or, make it a custom component so it can be replaced by something else? Wouldn't that be duplicated logic?
-    //   // Exclude tab?
-
-    // }
-  }
-
   QtObject{
     id: colorValues;
     property real saturation: 0.0;
@@ -164,7 +135,7 @@ Window{
       function onNewWindowRequested ( request ) {
         if(request.userInitiated === false){
           return;
-        }else if( request.destination === WebEngineNewWindowRequest.InNewTab ){ webBox.createTab( request.requestedUrl ); }
+        }else if( request.destination === WebEngineNewWindowRequest.InNewTab ){ webBox.createObject( {url : request.requestedUrl},  ); }
         else if( request.destination === WebEngineNewWindowRequest.InNewBackgroundTab ){webBox.createTab(request.requestedUrl, false ); }
       }
       function onCloseRequested() { root.deleteTab(); }
@@ -173,26 +144,23 @@ Window{
       function onUrlChanged(){console.log("URL CHANGED!");searchBar.text = webBox.readPropertyCache("url", "NULL").toString(); }
     }
 
-    function createTab(
-      idx = 0,
-      _url   = urlHelper.getEngineURL( ),
-    focusOnCreation = true,
-    overwriteTab = false,
-    tabComponent = root.webTabComponent
-    ) : void{
-          console.log("count of children: " + webBox.children.length);
-          if( ( webBox.children.length >= root.tabLimit )  && root.tabLimit !== -1) {return;}
-          // let tab =  tabComponent.createObject(webBox, { url : _url});
-          // webBox.registerTab(webBox.children.length -1);
-          // webBox.createTab()
-          webBox.createObject("webtab", focusOnCreation, {url: _url}, idx);
+//     function createTab(
+//       _url   = urlHelper.getEngineURL( ),
+// ,
+//     tabComponent = root.webTabComponent
+//     ) : void{
+//           console.log("count of children: " + webBox.children.length);
+//           if( ( webBox.children.length >= root.tabLimit )  && root.tabLimit !== -1) {return;}
+//           // let tab =  tabComponent.createObject(webBox, { url : _url});
+//           // webBox.registerTab(webBox.children.length -1);
+//           // webBox.createTab()
 
-        }
+//         }
 
     Component.onCompleted:{
       // webBox.setup();
       webBox.registerComponent("WebTab.qml", "webtab");
-      webBox.createObject( "webtab", true, {url: "https://www.google.com"} );
+      webBox.createObject( "webtab", true, {url: urlHelper.getEngineURL( )} );
       // console.log("registered!");
       // console.log(webBox.currentTab);
       // searchBar.text = webBox.getPropertyByName(currentIndex, "url")
@@ -273,11 +241,11 @@ Window{
             iconsrc: webBox.children[index]?.icon;
             hitbox.acceptedButtons: Qt.LeftButton | Qt.RightButton;
             hitbox.onTapped:(eventPoint, button)=>{
-                              if(button === Qt.LeftButton){ console.log("switching!"); root.switchToTab(index); }
+                              if(button === Qt.LeftButton){ console.log("switching!"); webBox.switchToIndex(index); }
                               if(button === Qt.RightButton){ root.deleteTab(index);/* this.destroy();*/}
                             }
           }
-          Keys.onReturnPressed:()=>{root.switchToTab(tabGrid.currentIndex);}
+          Keys.onReturnPressed:()=>{webBox.switchToIndex(tabGrid.currentIndex);}
           Keys.onTabPressed: ()=>{ tabGrid.currentIndex++;}
           Keys.onEscapePressed:()=>{switcher.close();}
         }
@@ -313,8 +281,8 @@ Window{
       text: '#' + webBox.currentIndex;
       property WheelHandler scrollArea: WheelHandler{
         onWheel: (wheel)=>{
-                   if (wheel.angleDelta.y > 0){ root.switchToTab( webBox.currentIndex + 1 ); } // Wheel up
-                   else if(wheel.angleDelta.y < 0) { root.switchToTab( webBox.currentIndex - 1 ); } // Wheel down
+                   if (wheel.angleDelta.y > 0){ webBox.switchToIndex( webBox.currentIndex + 1 ); } // Wheel up
+                   else if(wheel.angleDelta.y < 0) { webBox.switchToIndex( webBox.currentIndex - 1 ); } // Wheel down
                  }
       }
       border.width: 2;
@@ -377,8 +345,8 @@ Window{
       color:"#303030";
       textcolor: "#FFFFFF";
       onEditingFinished: ()=>{if(searchBar.text !== ""){
-                             // webBox.currentTab.url = urlHelper.getURL(searchBar.text);
-                             // webBox.forceActiveFocus();
+                             webBox.currentTab.url = urlHelper.getURL(searchBar.text);
+                             webBox.forceActiveFocus();
                            }
                          }
     }
@@ -427,10 +395,10 @@ Window{
     onActivated: {tabSwitcherLDR.active ^=1}}
   Shortcut{
     sequence: "Ctrl+T";
-    onActivated: {webBox.createTab(webBox.currentIndex +1);}}
+    onActivated: { webBox.createObject("webtab", true, {url: urlHelper.getEngineURL( )});}}
   Shortcut{
     sequence: "Ctrl+W";
-    onActivated: {root.deleteTab();}}
+    onActivated: {webBox.deleteTab(webBox.currentIndex);}}
   Shortcut{
     sequence: "Ctrl+R";
     onActivated: ()=>{/*root.currentView?.reload();*/ gc();}}
@@ -441,31 +409,31 @@ Window{
 
   Shortcut{
     sequence: "Ctrl+1";
-    onActivated: {root.switchToTab(0);}}
+    onActivated: {webBox.switchToIndex(0);}}
   Shortcut{
     sequence: "Ctrl+2";
-    onActivated: {root.switchToTab(1);}}
+    onActivated: {webBox.switchToIndex(1);}}
   Shortcut{
     sequence: "Ctrl+3";
-    onActivated: {root.switchToTab(2);}}
+    onActivated: {webBox.switchToIndex(2);}}
   Shortcut{
     sequence: "Ctrl+4";
-    onActivated: {root.switchToTab(3);}}
+    onActivated: {webBox.switchToIndex(3);}}
   Shortcut{
     sequence: "Ctrl+5";
-    onActivated: {root.switchToTab(4);}}
+    onActivated: {webBox.switchToIndex(4);}}
   Shortcut{
     sequence: "Ctrl+6";
-    onActivated: {root.switchToTab(5);}}
+    onActivated: {webBox.switchToIndex(5);}}
   Shortcut{
     sequence: "Ctrl+7";
-    onActivated: {root.switchToTab(6);}}
+    onActivated: {webBox.switchToIndex(6);}}
   Shortcut{
     sequence: "Ctrl+8";
-    onActivated: {root.switchToTab(7);}}
+    onActivated: {webBox.switchToIndex(7);}}
   Shortcut{
     sequence: "Ctrl+9";
-    onActivated: {root.switchToTab(8);}}
+    onActivated: {webBox.switchToIndex(8);}}
 
   Loader{
     active: root.enableShaders;

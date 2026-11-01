@@ -64,23 +64,27 @@ public:
     }
 
     Q_INVOKABLE qint64 getCurrentIndex()const{return m_currentIndex;}
-    Q_INVOKABLE void switchToIndex(const qint64 idx){
+    Q_INVOKABLE void switchToIndex(qint64 idx){
         // if(  m_currentIndex == idx ){qDebug()<<"RETURNING, IDX: "<<idx;return;}
 
         qDebug()<< "IDX: " << idx << "TABS SIZE: " << childItems().size();
         // if( idx > tabs.size() -1 || idx < 0 )return;
 
-        m_currentIndex = idx;
-        if(m_currentIndex < 0 && (childItems().size() >= (qsizetype)0)) {m_currentIndex = childItems().size() -1;}else if(m_currentIndex < 0 && childItems().size() == (qsizetype)0)m_currentIndex = 0;
+        if(idx < 0 && (childItems().size() > (qsizetype)0)) {idx = childItems().size() -1;}else if(idx < 0 && childItems().size() == (qsizetype)0)idx = 0;
 
-        childItems().at(idx)->setVisible(true);
-        if( childItems().at(idx) ->size() != this ->size() ) childItems().at(idx)->setSize(this->size());
-        childItems().at(idx)->forceActiveFocus();
-        emit this -> currentIndexChanged();
-        emit this ->currentTabChanged();
+        if(m_currentIndex >= childItems().size())return;
+        m_currentIndex = idx;
+
+        // childItems().at(idx)->setVisible(true);
+        // if( childItems().at(idx) ->size() != this ->size() ) childItems().at(idx)->setSize(this->size());
+        // childItems().at(idx)->forceActiveFocus();
+        // emit this -> currentIndexChanged();
+        // emit this ->currentTabChanged();
+        this->ensureCorrectVisibility();
+
     }
 
-    Q_INVOKABLE QQuickItem* tabAtIndex(const qint64 &idx){return childItems().at(idx);}
+    // Q_INVOKABLE QQuickItem* tabAtIndex(const qint64 &idx){return childItems().at(idx);}
 
     // Q_SIGNAL void requestTabRegistration(const qint64 &item_idx, qint64 destination_idx, bool focusOnCreation = true);
     // Q_INVOKABLE void registerTab (const qint64 &item_idx, qint64 destination_idx, bool focusOnCreation = true){
@@ -110,7 +114,7 @@ public:
     // }
 
     Q_INVOKABLE void deleteTab( qint64 idx){
-        if(idx <0 || idx >= childItems().size() ){return;}
+        if(idx <=0 || idx >= childItems().size() ){return;}
         childItems().at(idx)->deleteLater();
         // tabs.removeAt(idx);
         switchToIndex(m_currentIndex -1);
@@ -122,17 +126,14 @@ public:
         return childItems().isEmpty()? nullptr : childItems().at( m_currentIndex );
     }
 
-    Q_INVOKABLE void setSqueeze(bool val){squeezeOnDeletion = val;}
-
-    Q_INVOKABLE bool getSqueezeOnTabDeletion(){return squeezeOnDeletion;}
-
-
     Q_INVOKABLE void ensureCorrectVisibility(){
         QQuickItem* currentChild = getCurrentTab();
+        if(currentChild == nullptr) return;
         for(int i = 0; i < childItems().size(); i++){
             if(this -> childItems().at(i) != currentChild){ this ->childItems().at(i) -> setVisible(false); }
         }
         if(currentChild -> isVisible() == false)currentChild -> setVisible(true);
+        if( childItems().at(m_currentIndex) ->size() != this ->size() ) childItems().at(m_currentIndex)->setSize(this->size());
         if(currentChild ->hasActiveFocus() == false) currentChild ->forceActiveFocus();
     }
 
@@ -162,8 +163,6 @@ public:
     }
 
     QQuickStack(QQuickItem* parent = nullptr){
-        propertyCacheTable.reserve(10); // reserving 10 properties pre-emptively
-        // tabs.reserve(10);
         QObject::connect(this, &QQuickItem::heightChanged, [&](){
             QQuickItem* tab = getCurrentTab();
             if(tab != nullptr)tab->setHeight( this->height() );
@@ -174,15 +173,13 @@ public:
         });
 
         QObject::connect(this, &QQuickItem::visibleChildrenChanged, this,
-                         [this](){  ensureCorrectVisibility(); } );
+                         [&](){  this -> ensureCorrectVisibility(); } );
 
-        QObject::connect(this, &QQuickStack::currentTabChanged, [&](){ this -> rebuildPropertyCache();
-            ensureCorrectVisibility() ; // Replace with making the previous tab invisible, if possible. Either here or inside the function that changes the corrent tab.
-        });
-        QObject::connect(this, &QQuickItem::childrenChanged, this, [&](){
-            qDebug()<<"children changed!";
-            // this ->switchToIndex(-1);
-        });
+        QObject::connect(this, &QQuickStack::currentTabChanged, this,[&](){ this -> rebuildPropertyCache(); });
+        // QObject::connect(this, &QQuickItem::childrenChanged, this, [&](){
+        //     qDebug()<<"children changed!";
+        //     // this ->switchToIndex(-1);
+        // });
     }
 
 signals:
@@ -205,8 +202,8 @@ STATES:
 1 = being written to
 2 = being read from
 */
-    volatile char m_state = 0;
-    bool squeezeOnDeletion = false;
+    // volatile char m_state = 0;
+    // bool squeezeOnDeletion = false;
     // Keeping this around for convenience
     // To take .qml files as components and instantiate them in C++ correctly.
     // string may be the source of the file and/or a nickname for the type :)
