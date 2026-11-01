@@ -191,8 +191,8 @@ Window{
 
     Component.onCompleted:{
       // webBox.setup();
-      // webBox.registerComponent("WebTab.qml", "webtab");
-      // webBox.createTab();
+      webBox.registerComponent("WebTab.qml", "webtab");
+      webBox.createObject( "webtab", true, {url: "https://www.google.com"} );
       // console.log("registered!");
       // console.log(webBox.currentTab);
       // searchBar.text = webBox.getPropertyByName(currentIndex, "url")
@@ -504,25 +504,25 @@ Window{
 
   } // keeping this here in case...
 
-  ImageSource{
-  id: src;
-  }
-  CPUImage{
-  id: img;
-  antialiasing: false;
-  // smooth: false;
-  width: 100;
-  height:100;
-  z: 100;
-  Timer{
-  interval: 1;
-  running: true;
-  repeat: true;
-  onTriggered:img.x +=1;
-  }
+  // ImageSource{
+  // id: src;
+  // }
+  // CPUImage{
+  // id: img;
+  // antialiasing: false;
+  // // smooth: false;
+  // width: 100;
+  // height:100;
+  // z: 100;
+  // Timer{
+  // interval: 1;
+  // running: true;
+  // repeat: true;
+  // onTriggered:img.x +=1;
+  // }
 
-  imgsrc: src;
-  }
+  // imgsrc: src;
+  // }
 
   // QML_FPSCounter{
   // id: qmlFPSTIMER;

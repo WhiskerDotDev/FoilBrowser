@@ -56,6 +56,7 @@ public:
     }
 
     Q_INVOKABLE void rebuildPropertyCache(){
+        this -> propertyCacheTable.clear();
         for( const QString& item : defaultCacheItems ){
             QQmlProperty prop(getCurrentTab(), item);
             if( prop.isValid() == true )propertyCacheTable.insert(item, prop);
@@ -63,13 +64,15 @@ public:
     }
 
     Q_INVOKABLE qint64 getCurrentIndex()const{return m_currentIndex;}
-    Q_INVOKABLE void switchToIndex(qint64 idx){
+    Q_INVOKABLE void switchToIndex(const qint64 idx){
         // if(  m_currentIndex == idx ){qDebug()<<"RETURNING, IDX: "<<idx;return;}
 
-        qDebug()<< "IDX: " << idx << "TABS SIZE: " << tabs.size();
+        qDebug()<< "IDX: " << idx << "TABS SIZE: " << childItems().size();
         // if( idx > tabs.size() -1 || idx < 0 )return;
 
         m_currentIndex = idx;
+        if(m_currentIndex < 0 && (childItems().size() >= (qsizetype)0)) {m_currentIndex = childItems().size() -1;}else if(m_currentIndex < 0 && childItems().size() == (qsizetype)0)m_currentIndex = 0;
+
         childItems().at(idx)->setVisible(true);
         if( childItems().at(idx) ->size() != this ->size() ) childItems().at(idx)->setSize(this->size());
         childItems().at(idx)->forceActiveFocus();
@@ -77,37 +80,37 @@ public:
         emit this ->currentTabChanged();
     }
 
-    Q_INVOKABLE QQuickItem* tabAtIndex(const qint64 &idx){return tabs.at(idx);}
+    Q_INVOKABLE QQuickItem* tabAtIndex(const qint64 &idx){return childItems().at(idx);}
 
     // Q_SIGNAL void requestTabRegistration(const qint64 &item_idx, qint64 destination_idx, bool focusOnCreation = true);
-    Q_INVOKABLE void registerTab (const qint64 &item_idx, qint64 destination_idx, bool focusOnCreation = true){
-        // qDebug()<<"D_IDX: " << destination_idx<< " ARR SIZE: " << tabs.size();
-        // qDebug()<<"ITM IDX: " << item_idx;
-        // qDebug()<<"FAIL1";
+    // Q_INVOKABLE void registerTab (const qint64 &item_idx, qint64 destination_idx, bool focusOnCreation = true){
+    //     // qDebug()<<"D_IDX: " << destination_idx<< " ARR SIZE: " << tabs.size();
+    //     // qDebug()<<"ITM IDX: " << item_idx;
+    //     // qDebug()<<"FAIL1";
 
-        if( destination_idx > tabs.size() || destination_idx < 0 )destination_idx = tabs.size();
-        childItems().constLast() -> setSize( this -> size() );
-        QPointer<QQuickItem> ptr =  childItems().constLast();
-        tabs.insert( destination_idx, ptr );
-        qDebug() << "PTR: " << ptr << ptr.data()<< "SIZE:" << tabs.size();
-        if(focusOnCreation == true)switchToIndex(childItems().size() -1); // this also sets m_currentIndex to ensure previous tabs are invisible and unfocused
-        // if(tabs.size() > 1){
-        // qDebug()<< "D_IDX: " << destination_idx;
-        // qDebug()<< "INSERTED";
-        // }else{
-        // tabs.append(ptr);
-        // qDebug() << "APPENDED";
-        // }
+    //     if( destination_idx > tabs.size() || destination_idx < 0 )destination_idx = tabs.size();
+    //     childItems().constLast() -> setSize( this -> size() );
+    //     QPointer<QQuickItem> ptr =  childItems().constLast();
+    //     tabs.insert( destination_idx, ptr );
+    //     qDebug() << "PTR: " << ptr << ptr.data()<< "SIZE:" << tabs.size();
+    //     if(focusOnCreation == true)switchToIndex(childItems().size() -1); // this also sets m_currentIndex to ensure previous tabs are invisible and unfocused
+    //     // if(tabs.size() > 1){
+    //     // qDebug()<< "D_IDX: " << destination_idx;
+    //     // qDebug()<< "INSERTED";
+    //     // }else{
+    //     // tabs.append(ptr);
+    //     // qDebug() << "APPENDED";
+    //     // }
 
-        // qDebug()<<"FAIL2";
+    //     // qDebug()<<"FAIL2";
 
-        // // qDebug()<<"FAIL4";
-        // qDebug()<< "TAB:" << tabs.at(destination_idx);
-        // qDebug() << "registering tab: " << childItems().at( item_idx ) << "to INDEX: " << destination_idx;
-    }
+    //     // // qDebug()<<"FAIL4";
+    //     // qDebug()<< "TAB:" << tabs.at(destination_idx);
+    //     // qDebug() << "registering tab: " << childItems().at( item_idx ) << "to INDEX: " << destination_idx;
+    // }
 
     Q_INVOKABLE void deleteTab( qint64 idx){
-        if(idx <0 || idx >= tabs.size() ){return;}
+        if(idx <0 || idx >= childItems().size() ){return;}
         childItems().at(idx)->deleteLater();
         // tabs.removeAt(idx);
         switchToIndex(m_currentIndex -1);
@@ -144,28 +147,23 @@ public:
         qDebug()<<"COMPONENT: "<<ptr.data();
     }
 
-    Q_INVOKABLE void createObject(const QByteArray& nickname, bool focusOnCreation, const QVariantMap& properties, qint64 preferredIndex ){
-        qDebug()<<"NOT READY!";
+    Q_INVOKABLE void createObject(const QByteArray& nickname, bool focusOnCreation, const QVariantMap& properties){
+        // qDebug()<<"NOT READY!";
         if( componentTable[nickname].data()->isReady() == true){
             qDebug()<<"READY!";
             QQuickItem* obj =  qobject_cast<QQuickItem*>(componentTable[nickname]->createWithInitialProperties(properties));
             obj->setParentItem(this);
+            switchToIndex(-1);
             qDebug()<<"CREATED: " <<obj << "THIS: " << this;
             // obj ->setParent(this);
-            qDebug()<<"CREATE_IDX : "<< preferredIndex;
-            // INVOKE REGISTERTAB ASYNCHRONOUSLY
-            // QMetaMethod method =this -> metaObject() -> method(this->metaObject() ->indexOfMethod(fancyName));
-            // method .invoke(this, Qt::ConnectionType::QueuedConnection, childItems().size(), preferredIndex, focusOnCreation);
-
-            // delete method;
-            // registerTab(childItems().size(), preferredIndex, focusOnCreation);
+            // qDebug()<<"CREATE_IDX : "<< preferredIndex;
             return;
         }
     }
 
-    Q_INVOKABLE void setup(){
+    QQuickStack(QQuickItem* parent = nullptr){
         propertyCacheTable.reserve(10); // reserving 10 properties pre-emptively
-        tabs.reserve(10);
+        // tabs.reserve(10);
         QObject::connect(this, &QQuickItem::heightChanged, [&](){
             QQuickItem* tab = getCurrentTab();
             if(tab != nullptr)tab->setHeight( this->height() );
@@ -178,8 +176,12 @@ public:
         QObject::connect(this, &QQuickItem::visibleChildrenChanged, this,
                          [this](){  ensureCorrectVisibility(); } );
 
-        QObject::connect(this, &QQuickStack::currentTabChanged, [&](){ this -> propertyCacheTable.clear(); this -> rebuildPropertyCache();
-            SLOT( ensureCorrectVisibility() ) ; // Replace with making the previous tab invisible, if possible. Either here or inside the function that changes the corrent tab.
+        QObject::connect(this, &QQuickStack::currentTabChanged, [&](){ this -> rebuildPropertyCache();
+            ensureCorrectVisibility() ; // Replace with making the previous tab invisible, if possible. Either here or inside the function that changes the corrent tab.
+        });
+        QObject::connect(this, &QQuickItem::childrenChanged, this, [&](){
+            qDebug()<<"children changed!";
+            // this ->switchToIndex(-1);
         });
     }
 
@@ -189,12 +191,12 @@ signals:
 
 private:
 
-    const char* fancyName{ "registerTab"};
-    QList<QPointer<QQuickItem>> tabs;
+    // const char* fancyName{ "registerTab"};
+    // QList<QPointer<QQuickItem>> tabs;
     QList<QString> defaultCacheItems{"url", "loadProgress"};
     QHash< QByteArray , QPointer<QQmlComponent> > componentTable;
     QHash<QString, QQmlProperty> propertyCacheTable;
-    qint64 m_currentIndex = -1;
+    qint64 m_currentIndex = 0;
 
     /*
 STATES:
