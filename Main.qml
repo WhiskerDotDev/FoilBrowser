@@ -140,8 +140,9 @@ Window{
       }
       function onCloseRequested() { root.deleteTab(); }
 
-      // More functions here...
+      // UI-related functions here:
       function onUrlChanged(){console.log("URL CHANGED!");searchBar.text = webBox.readPropertyCache("url", "NULL").toString(); }
+      function onLoadProgressChanged(){console.log("Progress changed!");progressbar.value = webBox.readPropertyCache("loadProgress", 0.0)/100.0; console.log(webBox.readPropertyCache("loadProgress", 0.0)/100.0);}
     }
 
 //     function createTab(
@@ -306,17 +307,16 @@ Window{
 
     SimpleProgressBar{
       id: progressbar;
-      // width: parent.width;
+      enableColorSmoothing: true;
       anchors{
         right: titleBar.right;
         left: titleBar.left;
         bottom: titleBar.bottom;
       }
       height: 3;
-
-
-      // value:  (root.currentView?.loadProgress/100);
-      enableColorSmoothing: true;
+      visible: true;
+      value: 0.0;
+      z: titleBar.z +1; // not sure why, if I omit this line the progress bar is just buried.
     }
 
     Text {
@@ -401,11 +401,11 @@ Window{
     onActivated: {webBox.deleteTab(webBox.currentIndex);}}
   Shortcut{
     sequence: "Ctrl+R";
-    onActivated: ()=>{/*root.currentView?.reload();*/ gc();}}
+    onActivated: ()=>{/*root.currentView?.reload();*/webBox.invokeNamedFunctionOnCurrentTab("reload"); gc();}}
 
   Shortcut{
     sequence: "Ctrl+Shift+R";
-    onActivated: ()=>{/*root.currentView?.reloadAndBypassCache(); */gc();}} // try a signal to request reloading!
+    onActivated: ()=>{/*root.currentView?.reloadAndBypassCache(); */webBox.invokeNamedFunctionOnCurrentTab("reloadAndBypassCache");gc();}} // try a signal to request reloading!
 
   Shortcut{
     sequence: "Ctrl+1";

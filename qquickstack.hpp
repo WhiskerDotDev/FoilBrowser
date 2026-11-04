@@ -27,12 +27,18 @@ class QQuickStack : public QQuickItem{
     Q_PROPERTY(qint64 currentIndex READ getCurrentIndex WRITE switchToIndex NOTIFY currentIndexChanged FINAL)
 public:
 
+    //Return value can only be used to check if the method was called (and therefore exists).
+    Q_INVOKABLE bool invokeNamedFunctionOnCurrentTab(const QByteArray& name){
+        return QMetaObject::invokeMethod(getCurrentTab(), name);
+    }
+
     Q_INVOKABLE void removeCacheItem(const QString& item){
         qint64 idx = defaultCacheItems.indexOf(item);
         if(idx != -1)defaultCacheItems.removeAt(idx);
     }
 
-    Q_INVOKABLE void addCacheItem(const QString& item){ if(defaultCacheItems . contains(item) == false)defaultCacheItems.append(item); }
+    Q_INVOKABLE void addCacheItem(const QString& item){
+        if(defaultCacheItems.contains(item) == false)defaultCacheItems.append(item); }
 
     // returns errorValue if read was unsuccessful
     Q_INVOKABLE QVariant readPropertyCache(const QString& propertyName, const QVariant& errorValue = false ){
