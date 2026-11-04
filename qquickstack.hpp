@@ -65,23 +65,15 @@ public:
 
     Q_INVOKABLE qint64 getCurrentIndex()const{return m_currentIndex;}
     Q_INVOKABLE void switchToIndex(qint64 idx){
-        // if(  m_currentIndex == idx ){qDebug()<<"RETURNING, IDX: "<<idx;return;}
+        if(childItems().size() == 0) return; // if there are no children, why switch tabs at all?
+        if(idx >= childItems().size())return;
 
-        qDebug()<< "IDX: " << idx << "TABS SIZE: " << childItems().size();
-        // if( idx > tabs.size() -1 || idx < 0 )return;
-
-        if(idx < 0 && (childItems().size() > (qsizetype)0)) {idx = childItems().size() -1;}else if(idx < 0 && childItems().size() == (qsizetype)0)idx = 0;
-
-        if(m_currentIndex >= childItems().size())return;
+        if(idx < 0) {idx = childItems().size() -1;} //wrap-around
         m_currentIndex = idx;
-
-        // childItems().at(idx)->setVisible(true);
-        // if( childItems().at(idx) ->size() != this ->size() ) childItems().at(idx)->setSize(this->size());
-        // childItems().at(idx)->forceActiveFocus();
-        // emit this -> currentIndexChanged();
-        // emit this ->currentTabChanged();
         this->ensureCorrectVisibility();
 
+        emit this ->currentTabChanged(m_currentIndex);
+        emit this -> currentIndexChanged(); // Note to self, do NOT connect a functor to BOTH the CurrentTabChanged and CurrentIndexChanged signals.
     }
 
     // Q_INVOKABLE QQuickItem* tabAtIndex(const qint64 &idx){return childItems().at(idx);}
@@ -184,7 +176,7 @@ public:
 
 signals:
     void currentIndexChanged();
-    void currentTabChanged();
+    void currentTabChanged(qint64 new_idx);
 
 private:
 
