@@ -345,8 +345,8 @@ Window{
       color:"#303030";
       textcolor: "#FFFFFF";
       onEditingFinished: ()=>{if(searchBar.text !== ""){
-                             webBox.currentTab.url = urlHelper.getURL(searchBar.text);
                              webBox.forceActiveFocus();
+                             webBox.writePropertyCache("url", urlHelper.getURL(searchBar.text));
                            }
                          }
     }
@@ -399,13 +399,14 @@ Window{
   Shortcut{
     sequence: "Ctrl+W";
     onActivated: {webBox.deleteTab(webBox.currentIndex);}}
+
+  // calling gc() after the reload method helps keep RAM usage a little lower... Weird, I know.
   Shortcut{
     sequence: "Ctrl+R";
-    onActivated: ()=>{/*root.currentView?.reload();*/webBox.invokeNamedFunctionOnCurrentTab("reload"); gc();}}
-
+    onActivated: ()=>{webBox.invokeNamedFunctionOnCurrentTab("reload"); gc();}}
   Shortcut{
     sequence: "Ctrl+Shift+R";
-    onActivated: ()=>{/*root.currentView?.reloadAndBypassCache(); */webBox.invokeNamedFunctionOnCurrentTab("reloadAndBypassCache");gc();}} // try a signal to request reloading!
+    onActivated: ()=>{webBox.invokeNamedFunctionOnCurrentTab("reloadAndBypassCache");gc();}} // try a signal to request reloading!
 
   Shortcut{
     sequence: "Ctrl+1";
@@ -472,25 +473,25 @@ Window{
 
   } // keeping this here in case...
 
-  // ImageSource{
-  // id: src;
-  // }
-  // CPUImage{
-  // id: img;
-  // antialiasing: false;
-  // // smooth: false;
-  // width: 100;
-  // height:100;
-  // z: 100;
-  // Timer{
-  // interval: 1;
-  // running: true;
-  // repeat: true;
-  // onTriggered:img.x +=1;
-  // }
+  ImageSource{
+  id: src;
+  }
+  CPUImage{
+  id: img;
+  antialiasing: false;
+  // smooth: false;
+  width: 100;
+  height:100;
+  z: 100;
+  Timer{
+  interval: 100;
+  running: true;
+  repeat: true;
+  onTriggered:img.x +=1;
+  }
 
-  // imgsrc: src;
-  // }
+  imgsrc: src;
+  }
 
   // QML_FPSCounter{
   // id: qmlFPSTIMER;
