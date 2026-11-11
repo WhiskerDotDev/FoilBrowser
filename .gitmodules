@@ -1,0 +1,3 @@
+[submodule "QComponents"]
+	path = QComponents
+	url = https://github.com/WhiskerDotDev/QComponents
