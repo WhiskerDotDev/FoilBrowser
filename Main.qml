@@ -478,11 +478,12 @@ Window{
   }
   GPUImage{
   id: img;
+  visible:true;
   antialiasing: false;
   // smooth: false;
   width: 100;
   height:100;
-  z: 100;
+  z: 10;
   Timer{
   interval: 100;
   running: true;
