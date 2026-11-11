@@ -66,7 +66,7 @@ qt_add_qml_module(FoilBrowser
 
     NO_GENERATE_AOT_VALIDATION
 )
-add_subdirectory("C:/Libraries/QML/QComponents" QComponentsproj)
+add_subdirectory("QComponents" QComponentsproj)
 
 target_link_libraries( FoilBrowser PRIVATE
     Qt6::Core

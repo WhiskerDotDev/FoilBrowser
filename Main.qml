@@ -476,7 +476,7 @@ Window{
   ImageSource{
   id: src;
   }
-  CPUImage{
+  GPUImage{
   id: img;
   antialiasing: false;
   // smooth: false;

@@ -208,5 +208,8 @@ RUNTIMEDLLS/PATH.txt
 
 QSBTOOLS/
 
-QComponents*/
-QComponents/
+# QComponents*/
+QComponents/RETIRED/
+QComponents/build/
+QComponents/.*/
+# QComponents/
