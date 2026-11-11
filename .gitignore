@@ -207,9 +207,3 @@ RUNTIMEDLLS/PATH.txt
 *test*.*
 
 QSBTOOLS/
-
-# QComponents*/
-QComponents/RETIRED/
-QComponents/build/
-QComponents/.*/
-# QComponents/
