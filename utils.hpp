@@ -73,72 +73,46 @@ private:
 
 class Q_Searcher : public QObject{
     Q_OBJECT
-    QML_ELEMENT
+    QML_NAMED_ELEMENT(SearchEngineHelper)
     QML_SINGLETON
     Q_PROPERTY(SearchEngine searchEngine READ searchEngine WRITE setSearchEngine NOTIFY searchEngineChanged FINAL)
 public:
-    enum SearchEngine{
-        NullEngine ,
-        Google,
-        DuckDuckGo,
-        StartPage,
+    enum DefaultSearchEngines{ // kept merely for convenience purposes.
+        Google=0,
+        DuckDuckGo=1,
+        StartPage=2,
+        Brave = 3
     };
-    Q_ENUM(SearchEngine)
+    Q_ENUM(DefaultSearchEngines)
 
     // consider the following regex expression:
     // (http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)
     // found on: https://regexr.com/3e6m0
     // had to modify it to: (http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*) for it to work.
 
-    Q_INVOKABLE SearchEngine searchEngine() const {return m_searchProvider;}
+    Q_INVOKABLE qint64 searchEngine() const {return m_searchProvider;}
 
-    Q_INVOKABLE void setSearchEngine(const SearchEngine newEngine) {
-        if (m_searchProvider == newEngine) return;
+    Q_INVOKABLE void setSearchEngine(const qint64 newEngine) {
+        if (m_searchProvider == newEngine || newEngine >= m_registeredEngineURLs.length()) return;
+        if(newEngine <0)return;
         m_searchProvider = newEngine;
         emit searchEngineChanged();
     }
 
-    Q_INVOKABLE QUrl getEngineURL( ){
-        QString returnQuery;
-        switch(this->m_searchProvider){
-        case NullEngine:
-            returnQuery = "";
-            break;
-        case Google:
-            returnQuery = "https://Google.com/";
-            break;
-        case DuckDuckGo:
-            returnQuery = "https://DuckDuckGo.com/";
-            break;
-        case StartPage:
-            returnQuery = "https://StartPage.com/";
-        }
-        return (QUrl)returnQuery;
-    }
-
-    Q_INVOKABLE QUrl getQuery(const QString &query){
-        QString returnQuery;
-        switch(this->m_searchProvider){
-        case NullEngine:
-            returnQuery = "";
-            break;
-        case Google:
-            returnQuery = "https://Google.com/";
-            break;
-        case DuckDuckGo:
-            returnQuery = "https://DuckDuckGo.com/";
-            break;
-        case StartPage:
-            returnQuery = "https://StartPage.com/";
-        }
-        returnQuery += query; // Works because appending a random string seems to work fine.
-        return (QUrl)returnQuery;
+    Q_INVOKABLE qint64 registerEngine(const QString& url){
+        // returns index of already-registered engine, if you accidentally register a duplicate one.
+        qint64 engineIDX = 0;
+        engineIDX = m_registeredEngineURLs.indexOf(url);
+        if( engineIDX ==-1){
+            m_registeredEngineURLs.append(url);
+            return m_registeredEngineURLs.length() -1;}
+        else{return engineIDX;}
     }
     Q_INVOKABLE QUrl getURL(const QString &userInput){
         QUrl returnURL;
         QFileInfo file(userInput);
         QRegularExpression _regex = QRegularExpression( R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*))" );
-        if( _regex.match(userInput).hasMatch() == false ){ returnURL = getQuery(userInput);}
+        if( _regex.match(userInput).hasMatch() == false ){ returnURL = m_https + m_registeredEngineURLs[m_searchProvider] + userInput;}
         else if( file.exists() ){ returnURL = "file:///" + file.absoluteFilePath(); }
         else { returnURL = QUrl::fromUserInput(userInput);}
         return returnURL;
@@ -146,7 +120,15 @@ public:
 signals:
     Q_INVOKABLE void searchEngineChanged( );
 private:
-    inline static SearchEngine m_searchProvider = NullEngine;
+    qint64 m_searchProvider = 3;
+    const QString m_https = "https://";
+    // I could use a hashtable instead? How about I do?
+    QList<const QString> m_registeredEngineURLs{
+        "www.google.com/search?q=",
+        "duckduckgo.com/?q=",
+        "www.startpage.com/do/search?q=",
+        "search.brave.com/search?q="
+    };
 };
 
 
